@@ -25,29 +25,11 @@ Mat fourSplit;
 //High-level and image processing methods
 //==================================================================================================================
 
-void showImag2e(Mat image1, Mat image2, char * windowTitle1, char * windowTitle2) {
-
-	namedWindow(windowTitle1, CV_WINDOW_AUTOSIZE); //create a window with the name "MyWindow"
-	namedWindow(windowTitle2, CV_WINDOW_AUTOSIZE); //create a window with the name "MyWindow"
-
-	try {
-		imshow(windowTitle1, image1); //display the image which is stored in the 'img' in the "MyWindow" window
-		imshow(windowTitle2, image2); //display the image which is stored in the 'img' in the "MyWindow" window
-		waitKey(0); //wait infinite time for a keypress
-
-	}
-	catch (cv::Exception) {
-		cout << "Error occured whilst trying to open " << windowTitle1 << endl;
-		waitKey(0); //wait infinite time for a keypress
-	}
-
-	destroyWindow(windowTitle1); //destroy the window with the name, "MyWindow"
-	destroyWindow(windowTitle2); //destroy the window with the name, "MyWindow"
-}
 
 int main(int agrc, char ** argv) {
 
-	sourceImg = readImage("split.jpg");
+	sourceImg = readImage("split2.jpg", true);
+	Mat sourceImgCol = readImage("split2.jpg", false);
 
 	//set to maximum value
 	bestFitNorm -= 1;
@@ -55,12 +37,13 @@ int main(int agrc, char ** argv) {
 	//Smooth and get edges, as shown here: http://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/laplace_operator/laplace_operator.html
 	GaussianBlur(sourceImg, outImg, Size(3,3), 0, 0, BORDER_CONSTANT);
 	Laplacian(outImg, outImg, CV_8UC1, 3);
+	increaseContrast(outImg);
 
 	//Create image templates
 	makeTemplates(outImg.rows, outImg.cols, outImg.type());
 
 	//show images
-	showImage(sourceImg, "InputImage");
+	showImage(sourceImgCol, "InputImage");
 	showImage(outImg, "Output Image (Laplacian)");
 
 	/*showImage(vertSplit, "Template");
@@ -69,9 +52,7 @@ int main(int agrc, char ** argv) {
 	showImage(horTopRect, "Template");
 	showImage(vertRightRect, "Template");
 	showImage(vertLeftRect, "Template");
-	showImage(fourSplit, "Template");
-
-	showImag2e(outImg, fourSplit, "w1", "w2");*/
+	showImage(fourSplit, "Template");*/
 
 	//create each composite image
 	createComposite(vertSplit);
@@ -93,7 +74,7 @@ int main(int agrc, char ** argv) {
 
 	//extract and show the subscreens
 	showImage(*bestFit, "the best fit!");
-	extractSubScreens(bestFit);
+	extractSubScreens(&sourceImgCol);
 
 	return 0;
 }
@@ -107,13 +88,13 @@ void extractSubScreens(Mat * inImg) {
 		tSubScreen = Mat(*inImg, Rect(0, 0, inImg->cols/2, inImg->rows/2));
 		tSubScreen.copyTo(tl);
 
-		tSubScreen = Mat(*inImg, Rect(inImg->rows / 2, 0, inImg->cols / 2, inImg->rows / 2));
+		tSubScreen = Mat(*inImg, Rect(inImg->cols / 2, 0, inImg->cols / 2, inImg->rows / 2));
 		tSubScreen.copyTo(tr);
 
-		tSubScreen = Mat(*inImg, Rect(0, inImg->cols / 2, inImg->cols / 2, inImg->rows / 2));
+		tSubScreen = Mat(*inImg, Rect(0, inImg->rows / 2, inImg->cols / 2, inImg->rows / 2));
 		tSubScreen.copyTo(bl);
 
-		tSubScreen = Mat(*inImg, Rect(inImg->rows / 2, inImg->cols / 2, inImg->cols / 2, inImg->rows / 2));
+		tSubScreen = Mat(*inImg, Rect(inImg->cols / 2, inImg->rows / 2, inImg->cols / 2, inImg->rows / 2));
 		tSubScreen.copyTo(br);
 
 		showImage(tl, "Top Left");
@@ -167,7 +148,7 @@ void extractSubScreens(Mat * inImg) {
 		tSubScreen = Mat(*inImg, Rect(0, inImg->rows / 2, inImg->cols / 2, inImg->rows / 2));
 		tSubScreen.copyTo(bl);
 
-		tSubScreen = Mat(*inImg, Rect(inImg->cols / 2, inImg->rows / 2, inImg->cols, inImg->rows / 2));
+		tSubScreen = Mat(*inImg, Rect((inImg->cols / 2), inImg->rows / 2, inImg->cols/2, inImg->rows / 2));
 		tSubScreen.copyTo(br);
 
 		showImage(t, "Top");
@@ -229,7 +210,7 @@ void extractSubScreens(Mat * inImg) {
 void calculateNorm(Mat * inImage) {
 
 	//calculate the norm
-	long unsquaredNorm = 0;
+	unsigned long unsquaredNorm = 0;
 
 	for (int r = 0; r < sourceImg.rows; ++r) {
 		for (int c = 0; c < sourceImg.cols; ++c) {
@@ -239,7 +220,7 @@ void calculateNorm(Mat * inImage) {
 		}
 	}
 
-	long norm = sqrt(unsquaredNorm);
+	unsigned long norm = sqrt(unsquaredNorm);
 	
 	cout << norm << ". Unsquared norm: " << unsquaredNorm << endl;
 
@@ -259,6 +240,19 @@ void createComposite(Mat& inImage){
 
 			inImage.at<uchar>(r, c) = abs(inImage.at<uchar>(r, c) - outImg.at<uchar>(r, c));
 
+		}
+	}
+}
+
+void increaseContrast(Mat & inImage){
+
+	for (int r = 0; r < sourceImg.rows; ++r) {
+		for (int c = 0; c < sourceImg.cols; ++c) {
+
+			if (inImage.at<uchar>(r, c) > 40) {
+				
+				inImage.at<uchar>(r, c) = 255;
+			}
 		}
 	}
 }
@@ -307,9 +301,9 @@ void makeTemplates(int rows, int columns, int imgType) {
 //Helper methods
 //==================================================================================================================
 
-Mat readImage(const char * fileName) {
+Mat readImage(const char * fileName, bool greyScale) {
 
-	Mat image = imread(fileName, CV_LOAD_IMAGE_GRAYSCALE);
+	Mat image = (greyScale) ? imread(fileName, CV_LOAD_IMAGE_GRAYSCALE) : imread(fileName);
 
 	if (image.empty()) {
 

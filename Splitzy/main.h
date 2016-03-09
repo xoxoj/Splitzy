@@ -9,10 +9,11 @@
 using namespace cv;
 using namespace std;
 
-Mat readImage(const char * fileName);
+Mat readImage(const char * fileName, bool greyScale);
 void showImage(Mat image, char * windowTitle);
 
 void extractSubScreens(Mat *);
 void calculateNorm(Mat *);
 void createComposite(Mat& inImage);
+void increaseContrast(Mat & inImage);
 void makeTemplates(int rows, int columns, int imgType);
