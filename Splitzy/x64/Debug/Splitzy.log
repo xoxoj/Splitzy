@@ -1,3 +1,5 @@
 ﻿  main.cpp
+c:\users\christopher\documents\hackathons\splitzy\splitzy\main.cpp(242): warning C4244: 'initializing': conversion from 'double' to 'long', possible loss of data
+c:\users\christopher\documents\hackathons\splitzy\splitzy\main.cpp(247): warning C4018: '<': signed/unsigned mismatch
   Splitzy.vcxproj -> C:\Users\Christopher\Documents\Hackathons\Splitzy\x64\Debug\Splitzy.exe
   Splitzy.vcxproj -> C:\Users\Christopher\Documents\Hackathons\Splitzy\x64\Debug\Splitzy.pdb (Partial PDB)
